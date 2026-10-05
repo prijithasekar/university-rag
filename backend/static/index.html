@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>University Knowledge Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F1F4F1;
+  --panel: #FFFFFF;
+  --ink: #17261F;
+  --muted: #5B6A63;
+  --line: #D8DFDA;
+  --accent: #1E6B58;
+  --accent-ink: #FFFFFF;
+  --mark: #F7DB6A;
+  --warn-bg: #FBEBDD;
+  --warn: #9A4513;
+  --danger: #A3341F;
+  --serif: "Newsreader", Georgia, serif;
+  --sans: "Public Sans", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: 320px 1fr; height: 100%; }
+
+/* ---------- library ---------- */
+.library { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.brand { padding: 22px 22px 14px; }
+.brand h1 { font-family: var(--serif); font-size: 24px; line-height: 1.15; margin: 0; font-weight: 600; }
+.brand p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+
+.drop { margin: 6px 22px 14px; border: 1.5px dashed #9DB1A8; border-radius: 8px; padding: 18px 14px; text-align: center; color: var(--muted); font-size: 14px; transition: background .15s, border-color .15s; }
+.drop.over { background: #E6F0EC; border-color: var(--accent); }
+.drop button { background: none; border: none; color: var(--accent); font-weight: 600; padding: 0; text-decoration: underline; }
+.drop small { display: block; margin-top: 4px; font-size: 12px; }
+
+.status { margin: 0 22px 10px; font-size: 13px; min-height: 18px; }
+.status .ok { color: var(--accent); }
+.status .bad { color: var(--danger); }
+
+.doc-head { padding: 0 22px 6px; font-weight: 600; font-size: 13px; color: var(--muted); }
+.docs { list-style: none; margin: 0; padding: 0 12px 16px; overflow-y: auto; flex: 1; }
+.docs li { display: flex; align-items: flex-start; gap: 8px; padding: 10px; border-radius: 8px; }
+.docs li:hover { background: #F3F6F4; }
+.doc-name { font-weight: 500; word-break: break-word; }
+.doc-meta { font-size: 12px; color: var(--muted); }
+.doc-body { flex: 1; min-width: 0; }
+.del { background: none; border: none; color: var(--muted); font-size: 13px; padding: 2px 6px; border-radius: 4px; }
+.del:hover { color: var(--danger); background: #FBECE9; }
+.empty { padding: 14px 10px; color: var(--muted); font-size: 14px; }
+
+/* ---------- chat ---------- */
+.chat { display: flex; flex-direction: column; min-height: 0; }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 14px 28px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.topbar label { font-size: 13px; color: var(--muted); }
+.topbar select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; max-width: 260px; }
+.lib-toggle { display: none; margin-left: auto; background: none; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+
+.thread { flex: 1; overflow-y: auto; padding: 28px; }
+.thread-inner { max-width: 760px; margin: 0 auto; }
+
+.hello h2 { font-family: var(--serif); font-size: 34px; line-height: 1.15; margin: 8px 0 10px; font-weight: 600; }
+.hello p { color: var(--muted); max-width: 52ch; margin: 0 0 16px; }
+.try { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.try button { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; text-align: left; color: var(--ink); }
+.try button:hover { border-color: var(--accent); }
+
+.q { margin: 26px 0 10px; font-weight: 600; font-size: 16px; }
+.a { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
+.a .text { font-family: var(--serif); font-size: 18px; line-height: 1.6; max-width: 62ch; }
+.a .text p { margin: 0 0 10px; }
+.a .text ul { margin: 0 0 10px; padding-left: 20px; }
+.a .text > :last-child { margin-bottom: 0; }
+.pending { color: var(--muted); font-style: italic; }
+.error { color: var(--danger); }
+
+.cite { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; margin: 0 2px; vertical-align: 2px; font: 600 12px var(--sans); color: var(--accent); background: #E3EFEA; border: 1px solid #BDD6CC; border-radius: 10px; }
+.cite:hover { background: var(--accent); color: var(--accent-ink); }
+
+.conflict { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 9px 12px; margin-bottom: 12px; font-size: 14px; font-weight: 500; }
+.meta { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.badge { padding: 2px 9px; border-radius: 10px; font-weight: 600; font-size: 12px; }
+.badge.high { background: #DDEFE7; color: #17543F; }
+.badge.medium { background: #F8EFC9; color: #6B5710; }
+.badge.low, .badge.none { background: #F4DDD8; color: #8A2E1B; }
+
+.sources { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+.sources h3 { font-size: 13px; color: var(--muted); font-weight: 600; margin: 0 0 8px; }
+.src { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 10px; border-radius: 8px; border: 1px solid transparent; }
+.src + .src { margin-top: 4px; }
+.src .n { font: 600 12px var(--sans); color: var(--accent); background: #E3EFEA; border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; margin-top: 2px; }
+.src-title { font-weight: 600; font-size: 14px; word-break: break-word; }
+.src-sub { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.src-text { font-size: 13.5px; color: #33443C; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.src.open .src-text { -webkit-line-clamp: unset; display: block; }
+.src.flash { border-color: #E2C44A; background: color-mix(in srgb, var(--mark) 35%, white); }
+.src button.more { background: none; border: none; color: var(--accent); padding: 0; font-size: 12.5px; margin-top: 4px; }
+
+/* ---------- composer ---------- */
+.composer { border-top: 1px solid var(--line); background: var(--panel); padding: 14px 28px; }
+.composer form { max-width: 760px; margin: 0 auto; display: flex; gap: 10px; }
+.composer input { flex: 1; font: inherit; padding: 11px 14px; border: 1px solid #B9C6BF; border-radius: 8px; min-width: 0; }
+.composer input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+.composer .send { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px; padding: 0 20px; font-weight: 600; }
+.composer .send:disabled { opacity: .55; cursor: default; }
+
+@media (max-width: 820px) {
+  .app { grid-template-columns: 1fr; }
+  .library { display: none; position: fixed; inset: 0; z-index: 10; }
+  .library.show { display: flex; }
+  .lib-toggle { display: inline-block; }
+  .topbar, .thread, .composer { padding-left: 16px; padding-right: 16px; }
+  .hello h2 { font-size: 28px; }
+  .a { padding: 14px; }
+  .a .text { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="library" id="library">
+    <div class="brand">
+      <h1>University Knowledge Assistant</h1>
+      <p>Ask questions about your institution's documents.</p>
+    </div>
+
+    <div class="drop" id="drop">
+      <div>Drop files here or <button type="button" id="pick">choose files</button></div>
+      <small>PDF, DOCX, TXT or MD. Uploading a file with the same name updates it.</small>
+      <input type="file" id="file" multiple accept=".pdf,.docx,.txt,.md" hidden>
+    </div>
+    <div class="status" id="status" role="status"></div>
+
+    <div class="doc-head">Documents</div>
+    <ul class="docs" id="docs"></ul>
+    <button class="lib-toggle" id="closeLib" style="display:none;margin:0 22px 18px;">Close</button>
+  </aside>
+
+  <main class="chat">
+    <div class="topbar">
+      <label for="scope">Search in</label>
+      <select id="scope"><option value="">All documents</option></select>
+      <button class="lib-toggle" id="openLib" type="button">Documents</button>
+    </div>
+
+    <div class="thread" id="thread">
+      <div class="thread-inner" id="inner">
+        <div class="hello" id="hello">
+          <h2>What do you want to know?</h2>
+          <p>Answers come only from the documents you upload, and every answer shows the pages it came from.</p>
+          <div class="try" id="try"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <form id="form">
+        <input id="q" type="text" placeholder="Ask a question, e.g. What is the minimum attendance?" autocomplete="off" aria-label="Your question" required minlength="3">
+        <button class="send" id="send" type="submit">Ask</button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let msgCount = 0;
+
+/* ---------- documents ---------- */
+async function loadDocs() {
+  const res = await fetch('/api/documents');
+  const docs = await res.json();
+  const list = $('docs');
+  if (!docs.length) {
+    list.innerHTML = '<li class="empty">No documents yet. Upload a file to get started.</li>';
+  } else {
+    list.innerHTML = docs.map(d => `
+      <li>
+        <div class="doc-body">
+          <div class="doc-name">${esc(d.filename)}</div>
+          <div class="doc-meta">${d.chunks} chunks · version ${d.version} · ${new Date(d.uploaded_at * 1000).toLocaleDateString()}</div>
+        </div>
+        <button class="del" data-name="${esc(d.filename)}" aria-label="Delete ${esc(d.filename)}">Delete</button>
+      </li>`).join('');
+  }
+  const scope = $('scope'), current = scope.value;
+  scope.innerHTML = '<option value="">All documents</option>' +
+    docs.map(d => `<option value="${esc(d.filename)}">${esc(d.filename)}</option>`).join('');
+  scope.value = docs.some(d => d.filename === current) ? current : '';
+  renderSamples(docs.length);
+}
+
+function renderSamples(count) {
+  const box = $('try');
+  box.innerHTML = count ? '' : '';
+  if (!count) { box.innerHTML = '<p style="margin:0;color:var(--muted)">Upload a document on the left, then ask your first question.</p>'; return; }
+  ['What is the minimum attendance to write exams?', 'What is the revaluation fee?', 'When do hostel gates close?']
+    .forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.onclick = () => { $('q').value = t; $('form').requestSubmit(); }; box.appendChild(b); });
+}
+
+$('docs').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.del'); if (!btn) return;
+  const name = btn.dataset.name;
+  if (!confirm(`Delete "${name}" and remove it from search?`)) return;
+  await fetch('/api/documents/' + encodeURIComponent(name), { method: 'DELETE' });
+  setStatus(`<span class="ok">Deleted ${esc(name)}</span>`);
+  loadDocs();
+});
+
+/* ---------- upload ---------- */
+function setStatus(html) { $('status').innerHTML = html; }
+
+async function upload(fileList) {
+  if (!fileList.length) return;
+  const fd = new FormData();
+  [...fileList].forEach(f => fd.append('files', f));
+  setStatus('Processing documents…');
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    const out = await res.json();
+    setStatus(out.map(r => r.error
+      ? `<div class="bad">${esc(r.filename)}: ${esc(r.error)}</div>`
+      : `<div class="ok">${esc(r.filename)}: ${r.replaced ? 'updated' : 'added'} (${r.chunks} chunks)</div>`).join(''));
+  } catch (err) {
+    setStatus('<div class="bad">Upload failed. Check that the server is running.</div>');
+  }
+  $('file').value = '';
+  loadDocs();
+}
+
+$('pick').onclick = () => $('file').click();
+$('file').onchange = (e) => upload(e.target.files);
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => upload(e.dataTransfer.files));
+
+/* ---------- answer rendering ---------- */
+function renderText(text, id) {
+  const blocks = esc(text).split(/\n{2,}/).map(block => {
+    const lines = block.split('\n');
+    if (lines.every(l => l.trim().startsWith('- '))) {
+      return '<ul>' + lines.map(l => `<li>${l.trim().slice(2)}</li>`).join('') + '</ul>';
+    }
+    return '<p>' + lines.join('<br>') + '</p>';
+  }).join('');
+  return blocks.replace(/\[(\d+)\]/g, (_, n) => `<button class="cite" data-msg="${id}" data-n="${n}" aria-label="Show source ${n}">${n}</button>`);
+}
+
+function renderAnswer(data, id) {
+  let html = '';
+  if (data.conflict) html += '<div class="conflict">These documents disagree. Check the sources below before relying on this answer.</div>';
+  html += `<div class="text">${renderText(data.answer, id)}</div>`;
+  const label = { high: 'High match', medium: 'Medium match', low: 'Low match', none: 'Not found in documents' }[data.confidence];
+  html += `<div class="meta"><span class="badge ${data.confidence}">${label}</span></div>`;
+  if (data.sources.length) {
+    html += '<div class="sources"><h3>Sources</h3>' + data.sources.map((s, i) => `
+      <div class="src" id="src-${id}-${i + 1}">
+        <div class="n">${i + 1}</div>
+        <div>
+          <div class="src-title">${esc(s.filename)}</div>
+          <div class="src-sub">${esc(s.location)} · uploaded ${esc(s.uploaded_label)} · similarity ${s.similarity}</div>
+          <div class="src-text">${esc(s.text)}</div>
+          <button class="more" type="button">Show full excerpt</button>
+        </div>
+      </div>`).join('') + '</div>';
+  }
+  return html;
+}
+
+$('inner').addEventListener('click', (e) => {
+  const cite = e.target.closest('.cite');
+  if (cite) {
+    const el = $(`src-${cite.dataset.msg}-${cite.dataset.n}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('flash', 'open');
+    setTimeout(() => el.classList.remove('flash'), 1800);
+    return;
+  }
+  const more = e.target.closest('.more');
+  if (more) {
+    const src = more.closest('.src');
+    src.classList.toggle('open');
+    more.textContent = src.classList.contains('open') ? 'Show less' : 'Show full excerpt';
+  }
+});
+
+/* ---------- ask ---------- */
+$('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const question = $('q').value.trim();
+  if (question.length < 3) return;
+  $('hello').style.display = 'none';
+  const id = ++msgCount;
+  const inner = $('inner');
+  inner.insertAdjacentHTML('beforeend', `<div class="q">${esc(question)}</div><div class="a" id="a-${id}"><span class="pending">Searching your documents…</span></div>`);
+  $('q').value = ''; $('send').disabled = true;
+  const box = $(`a-${id}`);
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, filename: $('scope').value || null })
+    });
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    box.innerHTML = renderAnswer(await res.json(), id);
+  } catch (err) {
+    box.innerHTML = `<span class="error">Could not get an answer: ${esc(err.message)}. Check that the server is running and try again.</span>`;
+  }
+  $('send').disabled = false; $('q').focus();
+});
+
+/* ---------- mobile library drawer ---------- */
+$('openLib').onclick = () => { $('library').classList.add('show'); $('closeLib').style.display = 'inline-block'; };
+$('closeLib').onclick = () => { $('library').classList.remove('show'); };
+
+loadDocs();
+</script>
+</body>
+</html>
